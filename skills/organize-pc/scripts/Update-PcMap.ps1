@@ -29,8 +29,8 @@ $startMark = '<!-- organize-pc:auto-start -->'; $endMark = '<!-- organize-pc:aut
 
 if ($UnregisterTask) { schtasks.exe /Delete /TN $taskName /F | Out-Null; Write-Output "Removed scheduled task '$taskName'."; return }
 if ($RegisterTask) {
-    $launcher = Join-Path (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path 'run-hidden.vbs'
-    $cmd = "wscript.exe //B //Nologo \`"$launcher\`" \`"organize-pc\scripts\Update-PcMap.ps1\`""
+    $launcher = Join-Path (Resolve-Path (Join-Path $PSScriptRoot '..\..\..')).Path 'run-hidden.vbs'
+    $cmd = "wscript.exe //B //Nologo \`"$launcher\`" \`"skills\organize-pc\scripts\Update-PcMap.ps1\`""
     schtasks.exe /Create /SC DAILY /ST 09:00 /TN $taskName /TR $cmd /F | Out-Null
     Write-Output "Scheduled '$taskName' daily at 09:00 for $env:USERNAME."
 }

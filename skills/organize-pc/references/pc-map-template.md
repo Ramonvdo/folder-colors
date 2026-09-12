@@ -40,6 +40,13 @@ tags: [pc-map, organize-pc]
 - `00_INBOX`: holding pen, emptied weekly; two weeks old goes to `99_ARCHIVE`.
 - Finished work goes to `99_ARCHIVE\{year}\`; nothing is deleted by the skill.
 
+## Preferences
+
+- Preset: {A / B / C / adopt}; numbering: {plain NN_ / Johnny.Decimal / none}.
+- Ask before: every move, every rename, every new area, every README (always on).
+- Protected by request: {paths the user named as off-limits, one per line}.
+- Retention for archive candidates: {90} days untouched before a folder is even mentioned.
+
 ## Cloud and local
 
 | Location | Kind | Holds |

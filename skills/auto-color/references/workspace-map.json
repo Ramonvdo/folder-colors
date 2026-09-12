@@ -1,0 +1,21 @@
+{
+  "_comment": "Folder names commonly found inside a project or workspace, mapped to a category from categories.json. Matched case-insensitively on the folder name; the first rule that matches wins; anything in skip is never coloured (generated or vendored content).",
+  "rules": [
+    { "names": ["src", "source", "lib", "app", "apps", "packages", "cmd", "internal", "pkg", "modules"], "category": "Code" },
+    { "names": ["docs", "doc", "documentation", "wiki", "manual", "guides", "references", "reference"], "category": "Reference" },
+    { "names": ["tests", "test", "spec", "specs", "__tests__", "e2e", "integration"], "category": "System & Tools" },
+    { "names": ["scripts", "script", "tools", "bin", "ci", ".github", "hooks", "config", "configs", "settings", "infra", "deploy"], "category": "System & Tools" },
+    { "names": ["assets", "static", "public", "images", "img", "icons", "fonts", "design", "mockups", "figma", "brand"], "category": "Design" },
+    { "names": ["media", "video", "videos", "audio", "footage", "recordings"], "category": "Media" },
+    { "names": ["data", "datasets", "fixtures", "db", "database", "exports", "backup", "backups"], "category": "Data & Backups" },
+    { "names": ["examples", "example", "samples", "templates", "template", "boilerplate", "starter"], "category": "Templates" },
+    { "names": ["notes", "drafts", "draft", "wip", "scratch", "ideas", "sandbox", "playground"], "category": "Ideas & Drafts" },
+    { "names": ["archive", "archived", "old", "legacy", "deprecated"], "category": "Archive" },
+    { "names": ["clients", "client", "customers"], "category": "Clients" },
+    { "names": ["marketing", "content", "campaigns", "social"], "category": "Marketing" },
+    { "names": ["finance", "invoices", "bookkeeping", "accounting", "administration"], "category": "Finance" },
+    { "names": ["legal", "contracts"], "category": "Legal & Admin" },
+    { "names": ["courses", "learning", "books", "study"], "category": "Learning" }
+  ],
+  "skip": ["node_modules", ".git", ".venv", "venv", "__pycache__", "build", "dist", "out", "target", "bin-debug", "obj", ".next", ".nuxt", ".cache", "coverage", ".idea", ".vscode", ".claude", ".obsidian"]
+}

@@ -6,10 +6,11 @@
 Twenty folder icons, each tied to a category you can rename. Right-click a folder, pick
 "Folder Color...", click "Clients", and the folder turns light blue. The category name also
 lands in the folder's Tags and Categories, so Explorer can show, sort and group by it. The
-mapping lives in one JSON file. Two Claude Code skills ship with it: `folder-colors` colours
-and tags folders on request, and `organize-pc` turns "organise my PC" into a proposal table
-you approve, numbered areas with a README each, and a map of the machine any LLM reads
-first.
+mapping lives in one JSON file. Four Claude Code skills ship with it, as a plugin:
+`folder-colors` colours one folder on request, `auto-color` colours a whole tree or a
+project at once, `tidy-folder` brings order inside one folder (with a strict, sourced
+finance profile), and `organize-pc` turns "organise my PC" into a proposal table you
+approve, numbered areas with a README each, and a map of the machine any LLM reads first.
 
 <p align="center"><img src=".github/assets/palette.png" alt="The 20 colours and their default categories" width="820" /></p>
 
@@ -90,20 +91,46 @@ Everything is in `categories.json`:
 
 ## Use it with Claude Code
 
-Two skills ship in this repo. Link them into your skills folder once, from inside the
-checkout:
+The repo is a Claude Code plugin with four skills. Two ways to get them:
 
 ```powershell
-New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\folder-colors" -Target (Get-Location).Path
-New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\organize-pc" -Target "$((Get-Location).Path)\organize-pc"
+# Plugin (any machine): one marketplace, one install, all four skills
+claude plugin marketplace add Ramonvdo/folder-colors
+claude plugin install folder-colors@folder-colors
+
+# Developer path: link the checkout's skills into ~\.claude\skills as junctions
+.\install.ps1 -LinkSkills
 ```
 
-**folder-colors** (`SKILL.md`) colours and tags folders:
+Both routes need the checkout for the right-click menu (`install.ps1` registers it and
+records where the checkout is, so the skills find the scripts from anywhere). Other agents
+that read `AGENTS.md` (Codex, Cursor, OpenCode, Gemini CLI) find the same skills through
+it.
+
+**folder-colors** (`skills\folder-colors`) colours and tags one folder:
 
 - "Colour `D:\Clients\Acme` as a client folder."
 - "Rename the Marketing category to Content."
 
-**organize-pc** (`organize-pc\SKILL.md`) structures the machine and keeps it that way:
+**auto-color** (`skills\auto-color`) colours many existing folders at once, nothing moves:
+
+- "Colour-code everything in `D:\Projects`." One table, one yes.
+- "Colour this workspace." `src`, `docs`, `tests`, `assets` get their colours; the
+  `desktop.ini` files go into `.git\info\exclude`, so `git status` stays clean.
+- "Which folders have no colour yet?"
+
+**tidy-folder** (`skills\tidy-folder`) brings order inside one folder:
+
+- "Tidy this folder." Loose files grouped into a few subfolders by topic or type, names
+  normalised to `YYYY-MM-DD_Type_Name`, each as its own undoable batch.
+- "Set up my finance folder" or "file these invoices." The finance profile asks where the
+  business is tax-resident first, then files by year and document type with names read
+  from the documents themselves (`2026-02-04_Invoice_Acme_2026-0142.pdf`). The
+  Netherlands is the worked example, cited to the tax authority; other countries get a
+  template of what to look up, and nothing is assumed. Sources in
+  `skills\tidy-folder\references\sources.md`.
+
+**organize-pc** (`skills\organize-pc`) structures the machine and keeps it that way:
 
 - "Organise my PC." A short interview, a read-only inventory of the roots you choose, then
   a proposal table: numbered areas (`01_CLIENTS`, `04_FINANCE`, `99_ARCHIVE`, ...), each
@@ -115,13 +142,22 @@ New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\organize-pc" 
   Sense can be set to delete what sits in Downloads untouched for 14 days. That rule is
   Windows deleting files on a schedule: it is off unless you say yes to it.
 - "Where do client invoices go?" Answered from the READMEs, with the rule quoted.
+- "How is my PC doing?" The health table: transit folders, drift, stale areas, missing
+  READMEs, missing colours.
 - "Undo the last reorganisation."
 
-The map keeps itself honest: `organize-pc\scripts\Update-PcMap.ps1` rewrites its auto
-section from the real folders (new folders you made by hand show up as unmapped), and can
-be registered as a daily task. The doctrine behind the layout, numbered areas, depth of
-three, dated file names, transit folders that empty themselves, an SOP in every folder, is
-in `organize-pc\references\principles.md`; the starting layouts in `presets.md`.
+It asks before it changes anything, every time, and it starts every run by looking for
+opportunities to put to you as questions ("no finance folder for this business, want one
+set up?") rather than acting on them. Your own layout counts as a preset: adopt mode keeps
+your folder names and only adds colours, READMEs and the map if you say so. Folders with
+a `.git`, `CLAUDE.md`, `AGENTS.md`, a build file or an Obsidian vault inside are
+workspaces: moved whole if at all, never rearranged inside.
+
+The map keeps itself honest: `skills\organize-pc\scripts\Update-PcMap.ps1` rewrites its
+auto section from the real folders (new folders you made by hand show up as unmapped),
+and can be registered as a daily task. The doctrine behind the layout is in
+`skills\organize-pc\references\principles.md`; the starting layouts (a business one, a
+value-chain one, and PARA) with their sources in `presets.md` and `sources.md`.
 
 ## Uninstall
 

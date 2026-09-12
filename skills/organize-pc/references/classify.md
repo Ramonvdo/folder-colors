@@ -4,11 +4,12 @@ How each existing folder or loose file gets a target in the proposal. Apply the 
 order; the first that decides, decides. Every row of the proposal carries the rule that
 placed it, in one line.
 
-1. **Units stay whole.** A git repository (`.git` inside), a cloud root, an application's
-   data folder, a folder with its own `desktop.ini` icon from another tool: moved as one
-   item or left in place, never flattened.
-2. **Skip list.** `Windows`, `Program Files*`, `AppData`, `$RECYCLE.BIN`, `System Volume
-   Information`, `node_modules`, hidden system items. They are not in the proposal at all.
+1. **Units stay whole.** Everything `..\..\..\shared\protected-units.md` lists: a git
+   repository, a workspace with `CLAUDE.md`, `AGENTS.md` or a build root, an Obsidian
+   vault, a cloud root, a folder another tool gave an icon. Moved as one item or left in
+   place, never rearranged inside, never given a README. The inventory marks them
+   (`isGitRepo`, `isWorkspace`, `isCloudRoot`).
+2. **Skip list.** The same file's skip list. Those folders are not in the proposal at all.
 3. **The folder's own words.** A `README.md`, `CLAUDE.md` or `00_README.md` inside it says
    what it is; believe it over the name.
 4. **Name signals.** Client and company names, `invoice`, `receipt`, `tax`, `vat`,

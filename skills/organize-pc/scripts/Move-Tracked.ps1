@@ -92,7 +92,12 @@ switch ($PSCmdlet.ParameterSetName) {
     'Undo' {
         $log = Read-Log
         if (-not $log) { throw 'Nothing to undo: the log is empty.' }
-        if (-not $Batch) { $Batch = ($log | Where-Object op -eq 'move' | Select-Object -Last 1).batch }
+        if (-not $Batch) {
+            # The newest batch that still has moves to reverse (a bare -Undo twice steps back twice).
+            $open = @($log | Group-Object batch | Where-Object { @($_.Group | Where-Object op -eq 'move').Count -gt @($_.Group | Where-Object op -eq 'undo').Count } | Sort-Object Name)
+            if ($open.Count -eq 0) { throw 'Nothing left to undo: every logged batch is already reversed.' }
+            $Batch = $open[-1].Name
+        }
         $entries = @($log | Where-Object { $_.batch -eq $Batch -and $_.op -eq 'move' })
         if ($entries.Count -eq 0) { throw "No moves logged for batch $Batch" }
         $alreadyUndone = @($log | Where-Object { $_.batch -eq $Batch -and $_.op -eq 'undo' })

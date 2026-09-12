@@ -12,7 +12,10 @@
   console window appears.
 - Writes the category name into the folder's Tags and Categories properties, in the same
   `desktop.ini`.
-- The organize-pc skill moves files only through `organize-pc\scripts\Move-Tracked.ps1`,
+- `install.ps1` records the checkout path in `%USERPROFILE%\.folder-colors\config.json`
+  so the skills can find the scripts; nothing else is stored there.
+- The organize-pc and tidy-folder skills move files only through
+  `skills\organize-pc\scripts\Move-Tracked.ps1`,
   which refuses to overwrite and logs every move to
   `%USERPROFILE%\.folder-colors\organize-log.jsonl` so a batch can be undone. It never
   deletes. Its optional Downloads rule sets the same Storage Sense values as Settings does;

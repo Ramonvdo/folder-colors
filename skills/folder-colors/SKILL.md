@@ -5,12 +5,12 @@ description: Colour and tag one Windows folder by category with the Folder Color
 
 # folder-colors
 
-Everything lives next to this file: `Set-FolderColor.ps1` (the engine), `categories.json`
-(the mapping index -> colour -> category -> group; the only file a user edits),
-`Pick-FolderColor.ps1` (the palette the right-click entry opens), `install.ps1` /
-`uninstall.ps1` (the right-click entry) and `assets\Windows_11_coloured_icons.icl`.
-Run scripts with Windows PowerShell 5.1:
-`powershell -NoProfile -ExecutionPolicy Bypass -File "<this dir>\Set-FolderColor.ps1" ...`
+Everything lives at the repo root (`<root>`, found as `..\..\shared\tools.md` describes):
+`Set-FolderColor.ps1` (the engine), `categories.json` (the mapping index -> colour ->
+category -> group; the only file a user edits), `Pick-FolderColor.ps1` (the palette the
+right-click entry opens), `install.ps1` / `uninstall.ps1` (the right-click entry) and
+`assets\Windows_11_coloured_icons.icl`. Run scripts with Windows PowerShell 5.1:
+`powershell -NoProfile -ExecutionPolicy Bypass -File "<root>\Set-FolderColor.ps1" ...`
 
 ## Engine
 
@@ -43,10 +43,10 @@ Explorer windows repaint on their own.
 
 ## Many folders, a whole directory, the PC
 
-That is `organize-pc` (`organize-pc\SKILL.md` in this repo, `/organize-pc` when
-installed): it decides where things live, moves them with an undo log, writes the area
-READMEs and the PC map, and calls this engine for the colouring. Hand over rather than
-colouring folder by folder.
+Many folders at once, colour only: `auto-color`. Loose files inside one folder:
+`tidy-folder`. The whole machine, with moves, READMEs and the PC map: `organize-pc`. All
+three sit beside this skill in `skills\` and call this engine for the colouring. Hand
+over rather than colouring folder by folder.
 
 ## Change the categories or groups
 

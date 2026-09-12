@@ -7,7 +7,7 @@ Dim sh, fso, here, script, args, i, allowed, ok
 Set sh  = CreateObject("WScript.Shell")
 Set fso = CreateObject("Scripting.FileSystemObject")
 here = fso.GetParentFolderName(WScript.ScriptFullName)
-allowed = Array("Set-FolderColor.ps1", "Pick-FolderColor.ps1", "organize-pc\scripts\Update-PcMap.ps1")
+allowed = Array("Set-FolderColor.ps1", "Pick-FolderColor.ps1", "skills\organize-pc\scripts\Update-PcMap.ps1")
 ok = False
 If WScript.Arguments.Count > 0 Then
     For i = 0 To UBound(allowed)

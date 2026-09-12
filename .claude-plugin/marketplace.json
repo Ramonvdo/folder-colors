@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "folder-colors",
+  "description": "Colour-coded, tagged and documented folders on Windows 11, with Claude Code skills that keep a PC organised.",
+  "owner": {
+    "name": "Ramonvdo",
+    "url": "https://github.com/Ramonvdo"
+  },
+  "plugins": [
+    {
+      "name": "folder-colors",
+      "description": "Right-click folder colours and tags, plus the folder-colors, auto-color, tidy-folder and organize-pc skills.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

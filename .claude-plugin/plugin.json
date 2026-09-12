@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "folder-colors",
+  "description": "Colour and tag Windows 11 folders by category from the right-click menu, and let Claude organise a PC into numbered, documented areas: folder-colors, auto-color, tidy-folder and organize-pc skills.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Ramonvdo",
+    "url": "https://github.com/Ramonvdo"
+  },
+  "homepage": "https://github.com/Ramonvdo/folder-colors",
+  "repository": "https://github.com/Ramonvdo/folder-colors",
+  "license": "MIT",
+  "keywords": ["windows", "explorer", "folders", "colors", "tags", "organize", "desktop-ini", "productivity"],
+  "skills": ["./skills/folder-colors", "./skills/auto-color", "./skills/tidy-folder", "./skills/organize-pc"]
+}

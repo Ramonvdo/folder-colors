@@ -13,7 +13,11 @@
     the categories live in a palette window rather than in submenus.
 #>
 [CmdletBinding()]
-param()
+param(
+    # Also link every skill under skills\ into %USERPROFILE%\.claude\skills as a junction
+    # (the developer path; the plugin route needs no links).
+    [switch]$LinkSkills
+)
 
 $ErrorActionPreference = 'Stop'
 
@@ -50,9 +54,38 @@ Set-ItemProperty $menuKey -Name 'MUIVerb' -Value (($menuLabel -replace '&', '&&'
 Set-ItemProperty $menuKey -Name 'Icon'    -Value "$iclPath,13"
 Set-ItemProperty "$menuKey\command" -Name '(default)' -Value "wscript.exe //B //Nologo `"$launcher`" `"Pick-FolderColor.ps1`" -Path `"%1`" -ShowErrors"
 
+# Where the checkout is, for the skills: a skill directory may be a junction or a plugin-cache copy.
+$stateDir = Join-Path $env:USERPROFILE '.folder-colors'
+if (-not (Test-Path -LiteralPath $stateDir)) { $null = New-Item -ItemType Directory -Path $stateDir }
+$cfgFile = Join-Path $stateDir 'config.json'
+$existing = $null
+if (Test-Path -LiteralPath $cfgFile) { try { $existing = Get-Content -LiteralPath $cfgFile -Raw -Encoding UTF8 | ConvertFrom-Json } catch { $existing = $null } }
+$out = [ordered]@{ root = $root; installed = (Get-Date).ToString('s') }
+if ($existing -is [pscustomobject]) {   # keep keys other tools may have added (never a hashtable's own members)
+    foreach ($prop in @($existing.PSObject.Properties)) { if ($prop.Name -notin 'root', 'installed', 'IsReadOnly', 'IsFixedSize', 'IsSynchronized', 'Keys', 'Values', 'SyncRoot', 'Count') { $out[$prop.Name] = $prop.Value } }
+}
+[IO.File]::WriteAllText($cfgFile, ($out | ConvertTo-Json), (New-Object Text.UTF8Encoding($false)))
+
+if ($LinkSkills) {
+    $skillsHome = Join-Path $env:USERPROFILE '.claude\skills'
+    if (-not (Test-Path -LiteralPath $skillsHome)) { $null = New-Item -ItemType Directory -Path $skillsHome }
+    foreach ($skill in Get-ChildItem -LiteralPath (Join-Path $root 'skills') -Directory) {
+        $link = Join-Path $skillsHome $skill.Name
+        if (Test-Path -LiteralPath $link) {
+            $item = Get-Item -LiteralPath $link -Force
+            if ($item.LinkType -ne 'Junction') { Write-Warning "$link exists and is not a junction; left alone."; continue }
+            cmd.exe /c rmdir "$link" | Out-Null      # removes the junction only, never its target
+        }
+        $null = New-Item -ItemType Junction -Path $link -Target $skill.FullName
+        Write-Host "  linked $link -> $($skill.FullName)"
+    }
+}
+
 Write-Host "Installed '$menuLabel...' for the current user. Right-click any folder to use it." -ForegroundColor Green
 foreach ($g in $groups) {
     Write-Host "  $g"
     foreach ($c in @($cats | Where-Object { $_.group -eq $g })) { Write-Host ('    {0,2}  {1} ({2})' -f $c.index, $c.category, $c.color) }
 }
 Write-Host 'Edit categories.json to change categories, groups or labels; the palette reads it live.'
+Write-Host "Skills: install the plugin (see README) or run .\install.ps1 -LinkSkills to link skills\* into ~\.claude\skills."
+

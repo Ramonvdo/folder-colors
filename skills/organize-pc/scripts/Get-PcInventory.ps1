@@ -19,7 +19,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$configPath = Join-Path $PSScriptRoot '..\..\categories.json'
+$configPath = Join-Path $PSScriptRoot '..\..\..\categories.json'   # repo root: skills\<name>\scripts -> ..\..\..
 $cats = @{}
 if (Test-Path -LiteralPath $configPath) {
     foreach ($c in (Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json).categories) { $cats[[int]$c.index] = $c.category }
@@ -34,6 +34,8 @@ function Get-KnownFolder([string]$name) {
 if (-not $Roots) { $Roots = @((Get-KnownFolder 'Desktop'), (Get-KnownFolder 'Downloads'), (Get-KnownFolder 'MyDocuments')) }
 
 $skipNames = '$RECYCLE.BIN', 'System Volume Information', 'desktop.ini', 'Thumbs.db', 'node_modules'
+# Workspace markers: a folder holding one of these is a protected unit (shared\protected-units.md).
+$workspaceMarkers = 'CLAUDE.md', 'AGENTS.md', 'GEMINI.md', '.claude', 'package.json', 'pyproject.toml', 'Cargo.toml', 'go.mod', 'Makefile', '.obsidian'
 $clusters = @{
     documents  = '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.md', '.csv', '.odt', '.rtf'
     images     = '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.heic', '.bmp', '.psd', '.ai'
@@ -105,6 +107,8 @@ foreach ($root in $Roots) {
             $newest = ($kids | Measure-Object LastWriteTime -Maximum).Maximum
             $e.newest = $(if ($newest) { $newest.ToString('yyyy-MM-dd') } else { $null })   # newest direct child; the folder's own date says little
             $e.isGitRepo = Test-Path -LiteralPath (Join-Path $i.FullName '.git')
+            $found = @($kids | Where-Object { $workspaceMarkers -contains $_.Name -or $_.Extension -in '.sln', '.csproj' } | ForEach-Object Name)
+            $e.isWorkspace = ($found.Count -gt 0); if ($found.Count) { $e.workspaceMarkers = $found }
             $e.isCloudRoot = $cloudPaths -contains $i.FullName.TrimEnd('\')
             $e.hasReadme = [bool]($kids | Where-Object { $_.Name -match '^(00_README|README|CLAUDE)\.md$' })
             $e.folderColor = Get-FolderColor $i.FullName
