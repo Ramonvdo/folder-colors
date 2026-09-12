@@ -6,9 +6,10 @@
 Twenty folder icons, each tied to a category you can rename. Right-click a folder, pick
 "Folder Color...", click "Clients", and the folder turns light blue. The category name also
 lands in the folder's Tags and Categories, so Explorer can show, sort and group by it. The
-mapping lives in one JSON file. A `SKILL.md` at the repo root turns the same toolkit into a
-Claude Code skill, so "organise my Projects folder by category" becomes a table you approve
-and a set of coloured folders.
+mapping lives in one JSON file. Two Claude Code skills ship with it: `folder-colors` colours
+and tags folders on request, and `organize-pc` turns "organise my PC" into a proposal table
+you approve, numbered areas with a README each, and a map of the machine any LLM reads
+first.
 
 <p align="center"><img src=".github/assets/palette.png" alt="The 20 colours and their default categories" width="820" /></p>
 
