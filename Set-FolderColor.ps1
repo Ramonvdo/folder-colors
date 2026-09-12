@@ -58,12 +58,18 @@ $configPath = Join-Path $PSScriptRoot 'categories.json'
 $shellSection = '.ShellClassInfo'
 $ourSection   = 'FolderColors'      # our own section; its presence marks a folder as coloured by this tool
 $iconKeys     = 'IconResource', 'IconFile', 'IconIndex'
+# Explorer reads folder properties from desktop.ini sections named by property-set GUID:
+# "PropN=31,value" where N is the property id and 31 is VT_LPWSTR. Multi-values are ;-separated.
+$tagSlots = @(
+    @{ Section = '{F29F85E0-4FF9-1068-AB91-08002B27B3D9}'; Key = 'Prop5' },   # System.Keywords  (Tags column)
+    @{ Section = '{D5CDD502-2E9C-101B-9397-08002B2CF9AE}'; Key = 'Prop2' }    # System.Category  (Categories column)
+)
 
-function Get-Categories {
+function Get-Config {
     if (-not (Test-Path -LiteralPath $configPath)) { throw "categories.json not found at $configPath" }
-    $cfg = Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    return @($cfg.categories | Sort-Object index)
+    return Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 }
+function Get-Categories { return @((Get-Config).categories | Sort-Object index) }
 
 # "Light Blue", "light-blue" and "LightBlue" all compare equal.
 function Normalize([string]$s) { return ($s -replace '[^A-Za-z0-9]', '').ToLowerInvariant() }
@@ -97,7 +103,7 @@ function Read-Ini([string]$file) {
 function Write-Ini([string]$file, $ini) {
     $out = New-Object System.Collections.ArrayList
     foreach ($name in $ini.Keys) {
-        if ($ini[$name].Count -eq 0 -and $name -ne $shellSection) { continue }
+        if ($ini[$name].Count -eq 0) { continue }
         if ($name) { [void]$out.Add("[$name]") }
         foreach ($l in $ini[$name]) { [void]$out.Add($l) }
     }
@@ -124,6 +130,18 @@ function Remove-IniKeys($ini, [string]$section, [string[]]$keys) {
 function Test-IniEmpty($ini) {
     foreach ($name in $ini.Keys) { if ($ini[$name].Count -gt 0) { return $false } }
     return $true
+}
+
+# Add or remove one value in a ;-separated folder property, leaving the other values alone.
+function Edit-TagValue($ini, [string]$section, [string]$key, [string]$remove, [string]$add) {
+    $values = New-Object System.Collections.ArrayList
+    $current = Get-IniValue $ini $section $key
+    if ($current -match '^\d+,(.*)$') { foreach ($v in $Matches[1] -split ';') { if ($v.Trim()) { [void]$values.Add($v.Trim()) } } }
+    if ($remove) { $values = New-Object System.Collections.ArrayList (,@($values | Where-Object { $_ -ne $remove })) }
+    if ($add -and ($values -notcontains $add)) { [void]$values.Add($add) }
+    if (-not $ini.Contains($section)) { $ini[$section] = New-Object System.Collections.ArrayList }
+    Remove-IniKeys $ini $section @($key)
+    if ($values.Count -gt 0) { [void]$ini[$section].Add("$key=31,$($values -join ';')") }
 }
 
 # --- folder state ----------------------------------------------------------------------
@@ -206,6 +224,8 @@ switch ($PSCmdlet.ParameterSetName) {
             if ($null -ne $prev) { [void]$ini[$shellSection].Insert(0, "$k=$prev") }
         }
         $prevAttrs = Get-IniValue $ini $ourSection 'Previous.Attributes'
+        $ourTag = Get-IniValue $ini $ourSection 'Tag'
+        if ($ourTag) { foreach ($t in $tagSlots) { Edit-TagValue $ini $t.Section $t.Key -remove $ourTag -add '' } }
         $ini.Remove($ourSection)
 
         $prevIcon = Get-IniValue $ini $shellSection 'IconResource'
@@ -257,6 +277,15 @@ switch ($PSCmdlet.ParameterSetName) {
         [void]$ini[$shellSection].Insert(0, "IconResource=$iclPath,$($target.index)")
         Remove-IniKeys $ini $ourSection @('Index')
         [void]$ini[$ourSection].Insert(0, "Index=$($target.index)")
+
+        # The category name also goes into the folder's Tags and Categories (Explorer columns, Group by).
+        $ourTag = Get-IniValue $ini $ourSection 'Tag'
+        $writeTags = (Get-Config).writeTags
+        if ($null -eq $writeTags -or $writeTags) {
+            foreach ($t in $tagSlots) { Edit-TagValue $ini $t.Section $t.Key -remove $ourTag -add $target.category }
+            Remove-IniKeys $ini $ourSection @('Tag')
+            [void]$ini[$ourSection].Add("Tag=$($target.category)")
+        }
         Write-Ini $iniFile $ini
 
         # Explorer only honours desktop.ini on folders flagged ReadOnly or System.

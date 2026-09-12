@@ -1,6 +1,6 @@
 {
   "menuLabel": "Folder Color",
-  "labelFormat": "{category} ({color})",
+  "writeTags": true,
   "groups": ["Work", "Personal", "Status"],
   "categories": [
     { "index": 12, "color": "Light Blue", "category": "Clients",           "group": "Work",     "description": "One folder per client or customer",             "hints": ["client", "customer", "account"] },

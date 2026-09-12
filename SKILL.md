@@ -7,7 +7,8 @@ description: Colour-code Windows folders by category using the Folder Colors too
 
 Everything lives next to this file: `Set-FolderColor.ps1` (the engine), `categories.json`
 (the mapping index -> colour -> category -> group; the only file a user edits),
-`install.ps1` / `uninstall.ps1` (the right-click menu) and `assets\Windows_11_coloured_icons.icl`.
+`Pick-FolderColor.ps1` (the palette the right-click entry opens), `install.ps1` /
+`uninstall.ps1` (the right-click entry) and `assets\Windows_11_coloured_icons.icl`.
 Run scripts with Windows PowerShell 5.1:
 `powershell -NoProfile -ExecutionPolicy Bypass -File "<this dir>\Set-FolderColor.ps1" ...`
 
@@ -30,10 +31,15 @@ set through Properties) keeps it: the engine replaces only the icon lines, remem
 previous icon and the folder's attributes, and `-Reset` puts both back. `-Get` reports an
 empty index for a folder whose `desktop.ini` this tool has not touched.
 
+Colouring also writes the category name into the folder's Tags and Categories properties
+(Explorer columns and Group by; Windows Search does not index folder tags). Tags the folder
+already had stay; `-Reset` removes only ours. `"writeTags": false` in `categories.json`
+turns this off.
+
 ## One folder
 
-Run the engine, then `-Get` and confirm the reported index is the one requested. Explorer
-repaints the icon straight away; if a window still shows the old icon, F5 in that window.
+Run the engine, then `-Get` and confirm the reported index is the one requested. Open
+Explorer windows repaint on their own.
 
 ## Organise a directory by category
 
@@ -53,17 +59,16 @@ repaints the icon straight away; if a window still shows the old icon, F5 in tha
 ## Change the categories or groups
 
 Edit `categories.json`: 20 entries, indices 0..19 each used once, unique category and
-colour names, every `group` present in the `groups` list. Array order is menu order inside
-a group. Explorer caps a cascade at 16 entries, so keep at most 16 categories per group and
-at most 15 groups. Then run `install.ps1` to rebuild the menu. Folders already coloured
-keep their colour.
+colour names, every `group` present in the `groups` list. Array order is tile order inside
+a group. The palette reads the file when it opens, so no reinstall is needed. Folders
+already coloured keep their colour; their tags keep the old name until recoloured.
 
 ## Menu: install, repair, remove
 
 - `install.ps1`: no admin needed; it writes only
-  `HKCU\Software\Classes\Directory\shell\FolderColors` and rebuilds it from scratch each
-  run. Re-run it after editing `categories.json` or moving this folder (the menu stores
-  absolute paths).
+  `HKCU\Software\Classes\Directory\shell\FolderColors` (one "Folder Color..." entry that
+  opens the palette) and rebuilds it from scratch each run. Re-run it after moving this
+  folder (the entry stores absolute paths).
 - `uninstall.ps1`: removes that key. Coloured folders keep their icons for as long as this
   folder exists; `-Reset` any the user wants plain.
 - On the Windows 11 default menu the entry sits under "Show more options" (Shift+F10). On

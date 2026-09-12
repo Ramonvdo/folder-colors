@@ -1,13 +1,14 @@
 <h1 align="center">Folder Colors</h1>
 <p align="center">Colour-code Windows 11 folders by category from the right-click menu, or let Claude do it for you.</p>
 
-<p align="center"><img src=".github/assets/menu.png" alt="The Folder Color cascade in the Windows 11 context menu" width="820" /></p>
+<p align="center"><img src=".github/assets/picker.png" alt="The Folder Color palette opened from the right-click menu" width="640" /></p>
 
 Twenty folder icons, each tied to a category you can rename. Right-click a folder, pick
-"Folder Color", pick "Work > Clients", and the folder turns light blue. The mapping lives
-in one JSON file. A `SKILL.md` at the repo root turns the same toolkit into a Claude Code
-skill, so "organise my Projects folder by category" becomes a table you approve and a set
-of coloured folders.
+"Folder Color...", click "Clients", and the folder turns light blue. The category name also
+lands in the folder's Tags and Categories, so Explorer can show, sort and group by it. The
+mapping lives in one JSON file. A `SKILL.md` at the repo root turns the same toolkit into a
+Claude Code skill, so "organise my Projects folder by category" becomes a table you approve
+and a set of coloured folders.
 
 <p align="center"><img src=".github/assets/palette.png" alt="The 20 colours and their default categories" width="820" /></p>
 
@@ -33,9 +34,11 @@ tick Unblock, or run `powershell -ExecutionPolicy Bypass -File .\install.ps1`.
 
 ### From Explorer
 
-Right-click any folder, open "Folder Color", pick a group, pick a
-category. "Reset to default" at the bottom puts the plain yellow folder back. On the
-Windows 11 default menu the entry sits under "Show more options" (or press Shift+F10).
+Right-click any folder and pick "Folder Color...". A palette opens at the cursor with every
+category, grouped; the folder's current colour is outlined. Click a tile to apply it,
+"Reset to default" to put the plain yellow folder back, Esc or a click elsewhere to cancel.
+The palette takes about a second to appear (it is a PowerShell window). On the Windows 11
+default menu the entry sits under "Show more options" (or press Shift+F10).
 
 ### From PowerShell
 
@@ -47,7 +50,16 @@ Windows 11 default menu the entry sits under "Show more options" (or press Shift
 .\Set-FolderColor.ps1 -Path 'D:\Clients\Acme' -Reset
 ```
 
-The icon changes straight away. If an Explorer window still shows the old one, press F5.
+The icon changes straight away, in open Explorer windows too.
+
+### Tags and Categories
+
+Colouring a folder also writes the category name into the folder's Tags and Categories
+properties. Add the Tags column in Explorer (right-click a column header) to see it, sort
+on it, or use View > Group by > Tags. Tags a folder already had are kept; Reset removes only
+the one this tool added. Windows Search does not index folder tags, so `tags:Finance` in
+the search box only finds files. Set `"writeTags": false` in `categories.json` to turn this
+off.
 
 ## Customise
 
@@ -56,7 +68,7 @@ Everything is in `categories.json`:
 ```json
 {
   "menuLabel": "Folder Color",
-  "labelFormat": "{category} ({color})",
+  "writeTags": true,
   "groups": ["Work", "Personal", "Status"],
   "categories": [
     { "index": 12, "color": "Light Blue", "category": "Clients", "group": "Work",
@@ -66,13 +78,13 @@ Everything is in `categories.json`:
 }
 ```
 
-- Rename a category, move it to another group, or change the label format, then run
-  `.\install.ps1` again. Folders you already coloured keep their colour: the folder stores
-  the icon `index`, and the name lives only in the menu.
-- Explorer shows at most 16 entries per cascade. That is why categories sit inside groups.
-  Keep a group at 16 categories or fewer, and the number of groups at 15 or fewer.
-- `description` and `hints` are read by the Claude skill when it sorts folders; the menu
-  ignores them.
+- Rename a category, move it to another group, or reorder them: the palette reads the file
+  every time it opens, so there is nothing to re-run. Folders you already coloured keep
+  their colour: the folder stores the icon `index`, and the name lives only in the palette.
+- `description` shows as the tile's tooltip; `hints` are read by the Claude skill when it
+  sorts folders.
+- Why a palette and not a submenu: Explorer allows 16 entries in a cascading menu, nested
+  entries included, and 20 categories plus Reset do not fit.
 
 ## Use it with Claude Code
 
@@ -88,7 +100,7 @@ Then, in any Claude Code session:
 - "Organise my Documents folder by category." Claude lists the subfolders, proposes a
   category for each with a one-line reason, waits for your approval, applies it, and
   checks every folder afterwards.
-- "Rename the Marketing category to Content and rebuild the menu."
+- "Rename the Marketing category to Content."
 
 `SKILL.md` holds the rules Claude follows, including the folders it never touches.
 
@@ -104,14 +116,18 @@ run `.\Set-FolderColor.ps1 -Path <folder> -Reset` on any you want plain again.
 ## How it works
 
 - Windows lets a folder pick its own icon through a hidden `desktop.ini`. The script writes
-  one pointing at icon `n` inside `assets\Windows_11_coloured_icons.icl`, sets the
-  read-only and system attributes Explorer requires, and calls `SHChangeNotify` so the
-  icon repaints at once. A `desktop.ini` that is already there (a folder-type template, a
-  folder picture, an icon you set through Properties) is kept: only the icon lines change,
-  and "Reset to default" restores the icon and attributes the folder had before.
-- The menu is a single key under `HKCU\Software\Classes\Directory\shell`. Each entry runs
-  `powershell.exe -WindowStyle Hidden -File Set-FolderColor.ps1 -Path "%1" -Index n`.
-  Errors show up in a message box instead of a console.
+  one pointing at icon `n` inside `assets\Windows_11_coloured_icons.icl`, then applies it
+  through `SHGetSetFolderCustomSettings`, the same call Properties > Customize uses, which
+  is what makes open Explorer windows repaint at once. A `desktop.ini` that is already
+  there (a folder-type template, a folder picture, an icon you set through Properties) is
+  kept: only the icon lines change, and "Reset to default" restores the icon and
+  attributes the folder had before.
+- The menu entry is a single key under `HKCU\Software\Classes\Directory\shell`. It runs
+  `run-hidden.vbs`, which starts `Pick-FolderColor.ps1` without a console window; the
+  palette calls `Set-FolderColor.ps1` with the index you clicked. Errors show up in a
+  message box.
+- Tags and Categories are the standard folder properties Explorer reads from `desktop.ini`
+  (the `{F29F85E0-...}` and `{D5CDD502-...}` property-set sections).
 - Nothing runs in the background, nothing phones home, and no administrator rights are
   involved. See `SECURITY.md`.
 
@@ -128,4 +144,5 @@ to the `.icl` file: credit the author, no commercial use, no modifications. Deta
 The right-click idea comes from
 [nazsa13/Windows11-Folder-Colors](https://github.com/nazsa13/Windows11-Folder-Colors).
 This is a rewrite: per-user install with no admin prompt, no manual path editing, a
-category layer, a Claude skill, and an immediate icon refresh.
+category layer with tags, a palette instead of a capped submenu, a Claude skill, and an
+immediate icon refresh.
