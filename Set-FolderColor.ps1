@@ -69,7 +69,16 @@ function Get-Config {
     if (-not (Test-Path -LiteralPath $configPath)) { throw "categories.json not found at $configPath" }
     return Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 }
-function Get-Categories { return @((Get-Config).categories | Sort-Object index) }
+function Get-Categories {
+    $cats = @((Get-Config).categories | Sort-Object index)
+    foreach ($c in $cats) {
+        # Names end up as desktop.ini values and ;-separated tags, so they must stay plain text.
+        foreach ($v in @($c.category, $c.color)) {
+            if ($v -match '[\x00-\x1f\[\];=]') { throw "categories.json: '$v' contains a character that cannot go into desktop.ini ([ ] ; = or a control character)" }
+        }
+    }
+    return $cats
+}
 
 # "Light Blue", "light-blue" and "LightBlue" all compare equal.
 function Normalize([string]$s) { return ($s -replace '[^A-Za-z0-9]', '').ToLowerInvariant() }

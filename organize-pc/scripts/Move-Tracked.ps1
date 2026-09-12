@@ -20,6 +20,9 @@
 param(
     [Parameter(ParameterSetName = 'Plan', Mandatory = $true)][string]$Plan,
     [Parameter(ParameterSetName = 'Plan')][switch]$Apply,
+    # A folder moved to another volume is copied then deleted, so a failure half-way leaves two partial
+    # copies. Same-volume moves are atomic renames. Say so explicitly to allow the slow kind.
+    [Parameter(ParameterSetName = 'Plan')][switch]$AllowCrossVolume,
     [Parameter(ParameterSetName = 'Undo', Mandatory = $true)][switch]$Undo,
     [Parameter(ParameterSetName = 'Undo')][string]$Batch,
     [Parameter(ParameterSetName = 'List', Mandatory = $true)][switch]$List
@@ -67,6 +70,9 @@ switch ($PSCmdlet.ParameterSetName) {
             if ($seen.ContainsKey($m.to.ToLowerInvariant())) { [void]$problems.Add("two entries target the same path: $($m.to)") }
             $seen[$m.to.ToLowerInvariant()] = $true
             if ($m.to.TrimEnd('\').ToLowerInvariant().StartsWith($m.from.TrimEnd('\').ToLowerInvariant() + '\')) { [void]$problems.Add("destination is inside its own source: $($m.from)") }
+            if (-not $AllowCrossVolume -and (Test-Path -LiteralPath $m.from -PathType Container) -and ($m.from.Substring(0, 2).ToLowerInvariant() -ne $m.to.Substring(0, 2).ToLowerInvariant())) {
+                [void]$problems.Add("folder would move to another volume (copy then delete): $($m.from) -> $($m.to). Re-run with -AllowCrossVolume to accept that.")
+            }
         }
         if ($problems.Count) { throw ("Plan rejected:`n  " + ($problems -join "`n  ")) }
 

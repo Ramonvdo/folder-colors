@@ -11,11 +11,12 @@ placed it, in one line.
    Information`, `node_modules`, hidden system items. They are not in the proposal at all.
 3. **The folder's own words.** A `README.md`, `CLAUDE.md` or `00_README.md` inside it says
    what it is; believe it over the name.
-4. **Name signals.** Client and company names, `invoice`, `factuur`, `receipt`, `tax`,
-   `btw`, `contract`, `agreement`, `course`, `book`, `brand`, `logo`, `footage`, `backup`,
-   `template`, `old`, `archive`, a year. The `hints` list of each category in
-   `categories.json` is the same idea, in the user's own vocabulary; extend it when the
-   interview reveals words the user uses.
+4. **Name signals.** Client and company names, `invoice`, `receipt`, `tax`, `vat`,
+   `contract`, `agreement`, `course`, `book`, `brand`, `logo`, `footage`, `backup`,
+   `template`, `old`, `archive`, a year, and their equivalents in the user's language
+   (`factuur`, `Rechnung`). The `hints` list of each category in `categories.json` is the
+   same idea, in the user's own vocabulary; extend it when the interview reveals words the
+   user uses.
 5. **Extension clusters** for loose files: documents, images, video, audio, code,
    installers, archives (`Get-PcInventory.ps1` reports them). Installers go to
    `System & Tools` or the archive; archives (`.zip`) are opened in the mind first: a zip of

@@ -23,6 +23,18 @@
 The icon library (`.icl`) is a resource-only DLL: it contains icons and no code. See
 `NOTICE.md` for its origin.
 
+Things to know:
+
+- `run-hidden.vbs` starts only the three scripts of this repo and nothing else. The menu
+  entry and the optional task point at your checkout, so keep the checkout in a folder
+  only your account can write to; anything that can edit those files runs as you.
+- Colouring a junction or symbolic link writes the `desktop.ini` into its target folder.
+- The Downloads rule is Storage Sense deleting files on a schedule; it is applied only when
+  you run `Set-DownloadsPolicy.ps1 -Apply` (or say yes when the skill offers it), and it is
+  reversible with `-Days 0`.
+- Moving a folder to another volume is a copy followed by a delete; `Move-Tracked.ps1`
+  refuses it unless you pass `-AllowCrossVolume`.
+
 ## Reporting a vulnerability
 
 Open a private security advisory on the GitHub repository ("Security" tab, "Report a

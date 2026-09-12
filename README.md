@@ -82,7 +82,8 @@ Everything is in `categories.json`:
   every time it opens, so there is nothing to re-run. Folders you already coloured keep
   their colour: the folder stores the icon `index`, and the name lives only in the palette.
 - `description` shows as the tile's tooltip; `hints` are read by the Claude skill when it
-  sorts folders.
+  sorts folders. Add words in your own language there (`factuur`, `Rechnung`) so files get
+  recognised the way you name them.
 - Why a palette and not a submenu: Explorer allows 16 entries in a cascading menu, nested
   entries included, and 20 categories plus Reset do not fit.
 
@@ -110,7 +111,8 @@ New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\organize-pc" 
   Each area gets a `00_README.md` (its rules, in the folder itself) and the machine gets a
   `PC-MAP.md` in your profile that any LLM reads first.
 - "Tidy my Downloads." Files get a place according to the map and the READMEs; Storage
-  Sense can be set to delete what sits in Downloads untouched for 14 days.
+  Sense can be set to delete what sits in Downloads untouched for 14 days. That rule is
+  Windows deleting files on a schedule: it is off unless you say yes to it.
 - "Where do client invoices go?" Answered from the READMEs, with the rule quoted.
 - "Undo the last reorganisation."
 
@@ -144,8 +146,9 @@ run `.\Set-FolderColor.ps1 -Path <folder> -Reset` on any you want plain again.
   message box.
 - Tags and Categories are the standard folder properties Explorer reads from `desktop.ini`
   (the `{F29F85E0-...}` and `{D5CDD502-...}` property-set sections).
-- Nothing runs in the background, nothing phones home, and no administrator rights are
-  involved. See `SECURITY.md`.
+- Nothing phones home and no administrator rights are involved. Nothing runs in the
+  background either, unless you register the optional daily map refresh from organize-pc.
+  See `SECURITY.md`.
 
 ## Licence and credits
 
