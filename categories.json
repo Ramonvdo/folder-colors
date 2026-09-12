@@ -1,0 +1,29 @@
+{
+  "menuLabel": "Folder Color",
+  "labelFormat": "{category} ({color})",
+  "groups": ["Work", "Personal", "Status"],
+  "categories": [
+    { "index": 12, "color": "Light Blue", "category": "Clients",           "group": "Work",     "description": "One folder per client or customer",             "hints": ["client", "customer", "account"] },
+    { "index": 13, "color": "Blue",       "category": "Business",          "group": "Work",     "description": "Company operations, planning, strategy",        "hints": ["business", "company", "operations", "strategy", "planning"] },
+    { "index": 14, "color": "Navy",       "category": "Code",              "group": "Work",     "description": "Repositories and dev projects",                 "hints": ["code", "repo", "src", "dev", "github"] },
+    { "index": 9,  "color": "Green",      "category": "Finance",           "group": "Work",     "description": "Invoices, bookkeeping, receipts, bank exports", "hints": ["finance", "invoice", "bookkeeping", "receipts", "bank", "btw"] },
+    { "index": 11, "color": "Teal",       "category": "Marketing",         "group": "Work",     "description": "Content, campaigns, social, copy",              "hints": ["marketing", "content", "campaign", "social", "copy", "ads"] },
+    { "index": 17, "color": "Purple",     "category": "Design",            "group": "Work",     "description": "Brand assets, mockups, source files",           "hints": ["design", "brand", "mockup", "figma", "logo"] },
+    { "index": 16, "color": "Racer Blue", "category": "Media",             "group": "Work",     "description": "Video, audio, raw footage",                     "hints": ["video", "audio", "footage", "music", "recordings"] },
+    { "index": 4,  "color": "Brown",      "category": "Legal & Admin",     "group": "Work",     "description": "Contracts, tax, insurance, government",         "hints": ["legal", "contract", "tax", "insurance", "admin", "kvk"] },
+    { "index": 15, "color": "Space Blue", "category": "Data & Backups",    "group": "Work",     "description": "Exports, databases, backup sets",               "hints": ["data", "backup", "export", "database", "dump"] },
+
+    { "index": 18, "color": "Pink",       "category": "Photos & Family",   "group": "Personal", "description": "Personal photos and memories",                  "hints": ["photos", "family", "pictures", "memories", "holiday"] },
+    { "index": 10, "color": "Mint",       "category": "Health & Personal", "group": "Personal", "description": "Medical, fitness, personal admin",              "hints": ["health", "medical", "fitness", "personal"] },
+    { "index": 7,  "color": "Lime",       "category": "Learning",          "group": "Personal", "description": "Courses, tutorials, study material",            "hints": ["course", "tutorial", "learning", "study", "book"] },
+    { "index": 19, "color": "Maroon",     "category": "Private",           "group": "Personal", "description": "Sensitive, confidential, restricted",           "hints": ["private", "confidential", "sensitive", "secret", "passwords"] },
+
+    { "index": 3,  "color": "Red",        "category": "Urgent",            "group": "Status",   "description": "Needs action this week, deadlines",             "hints": ["urgent", "asap", "deadline", "todo", "now"] },
+    { "index": 5,  "color": "Orange",     "category": "Active Projects",   "group": "Status",   "description": "Being worked on right now",                     "hints": ["project", "wip", "current", "active"] },
+    { "index": 6,  "color": "Yellow",     "category": "Ideas & Drafts",    "group": "Status",   "description": "Notes, brainstorms, unfinished thinking",       "hints": ["ideas", "draft", "notes", "brainstorm", "scratch"] },
+    { "index": 2,  "color": "White",      "category": "Templates",         "group": "Status",   "description": "Blank starting points and boilerplates",        "hints": ["template", "boilerplate", "starter", "blank"] },
+    { "index": 8,  "color": "Olive",      "category": "Reference",         "group": "Status",   "description": "Documentation, manuals, saved articles",        "hints": ["docs", "reference", "manual", "wiki", "articles"] },
+    { "index": 1,  "color": "Grey",       "category": "System & Tools",    "group": "Status",   "description": "Installers, configs, dotfiles, scripts",        "hints": ["tools", "config", "scripts", "setup", "drivers"] },
+    { "index": 0,  "color": "Dark Grey",  "category": "Archive",           "group": "Status",   "description": "Finished or dormant work kept for the record",  "hints": ["archive", "old", "done", "legacy"] }
+  ]
+}
