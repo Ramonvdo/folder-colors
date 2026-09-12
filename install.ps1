@@ -25,14 +25,15 @@ $MaxPerCascade = 16   # Explorer's hard limit for a cascading menu
 $root       = $PSScriptRoot
 $iclPath    = Join-Path $root 'assets\Windows_11_coloured_icons.icl'
 $engine     = Join-Path $root 'Set-FolderColor.ps1'
+$launcher   = Join-Path $root 'Set-FolderColor.vbs'     # starts the engine with no console window
 $configPath = Join-Path $root 'categories.json'
 $menuKey    = 'HKCU:\Software\Classes\Directory\shell\FolderColors'
 
-foreach ($f in $iclPath, $engine, $configPath) {
+foreach ($f in $iclPath, $engine, $launcher, $configPath) {
     if (-not (Test-Path -LiteralPath $f)) { throw "Missing file: $f" }
 }
 # Files downloaded as a zip carry a mark-of-the-web that blocks scripts; clear it.
-Unblock-File -LiteralPath $iclPath, $engine, $configPath
+Unblock-File -LiteralPath $iclPath, $engine, $launcher, $configPath
 
 $cfg    = Get-Content -LiteralPath $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $cats   = @($cfg.categories)          # array order = menu order inside each group
@@ -66,7 +67,7 @@ function New-Cascade([string]$key, [string]$label, [string]$icon) {
     Set-ItemProperty $key -Name 'SubCommands' -Value ''
 }
 
-$engineCall = "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$engine`" -Path `"%1`" -ShowErrors"
+$engineCall = "wscript.exe //B //Nologo `"$launcher`" -Path `"%1`" -ShowErrors"
 
 if (Test-Path $menuKey) { Remove-Item $menuKey -Recurse -Force }
 New-Cascade $menuKey $menuLabel "$iclPath,13"

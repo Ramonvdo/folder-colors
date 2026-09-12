@@ -142,19 +142,41 @@ function Read-FolderState([string]$folder) {
     return $state
 }
 
-# Tell Explorer the folder changed so the icon repaints now instead of minutes later.
-function Send-ShellNotify([string]$folder) {
+# Apply the icon through the shell's own folder-customisation API (what Properties > Customize
+# uses). Writing desktop.ini alone leaves open Explorer windows showing the old icon until they
+# are closed; this call also invalidates the cached folder icon, so windows repaint at once.
+function Set-ShellFolderIcon([string]$folder, [string]$iconFile, [int]$iconIndex) {
     if (-not ('FolderColors.Shell' -as [type])) {
         Add-Type -Namespace FolderColors -Name Shell -MemberDefinition @'
+[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+public struct SHFOLDERCUSTOMSETTINGS {
+    public uint dwSize; public uint dwMask; public IntPtr pvid;
+    public string pszWebViewTemplate; public uint cchWebViewTemplate; public string pszWebViewTemplateVersion;
+    public string pszInfoTip; public uint cchInfoTip; public IntPtr pclsid; public uint dwFlags;
+    public string pszIconFile; public uint cchIconFile; public int iIconIndex;
+    public string pszLogo; public uint cchLogo;
+}
+[DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+public static extern int SHGetSetFolderCustomSettings(ref SHFOLDERCUSTOMSETTINGS pfcs, string pszPath, uint dwReadWrite);
 [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
 public static extern void SHChangeNotify(int wEventId, int uFlags, string dwItem1, IntPtr dwItem2);
 '@
     }
-    $SHCNE_UPDATEITEM = 0x2000; $SHCNE_UPDATEDIR = 0x1000
-    $SHCNF_PATHW = 0x0005;      $SHCNF_FLUSH = 0x1000
+    $fcs = New-Object FolderColors.Shell+SHFOLDERCUSTOMSETTINGS
+    $fcs.dwSize = [Runtime.InteropServices.Marshal]::SizeOf($fcs)
+    $fcs.dwMask = 0x10                     # FCSM_ICONFILE
+    $fcs.pszIconFile = $iconFile           # empty string = no custom icon
+    $fcs.iIconIndex = $iconIndex
+    $hr = [FolderColors.Shell]::SHGetSetFolderCustomSettings([ref]$fcs, $folder, 2)   # FCS_FORCEWRITE
+    if ($hr -ne 0) { throw ("Windows refused to update the folder icon (HRESULT 0x{0:X8})" -f $hr) }
+    $SHCNE_UPDATEITEM = 0x2000; $SHCNF_PATHW = 0x0005; $SHCNF_FLUSH = 0x1000
     [FolderColors.Shell]::SHChangeNotify($SHCNE_UPDATEITEM, $SHCNF_PATHW -bor $SHCNF_FLUSH, $folder, [IntPtr]::Zero)
-    $parent = Split-Path -Path $folder -Parent
-    if ($parent) { [FolderColors.Shell]::SHChangeNotify($SHCNE_UPDATEDIR, $SHCNF_PATHW -bor $SHCNF_FLUSH, $parent, [IntPtr]::Zero) }
+}
+
+# "file,index" as stored in desktop.ini -> file and index
+function Split-IconResource([string]$value) {
+    if ($value -match '^(.*),(-?\d+)\s*$') { return @($Matches[1].Trim(), [int]$Matches[2]) }
+    return @($value.Trim(), 0)
 }
 
 try {
@@ -186,6 +208,10 @@ switch ($PSCmdlet.ParameterSetName) {
         $prevAttrs = Get-IniValue $ini $ourSection 'Previous.Attributes'
         $ini.Remove($ourSection)
 
+        $prevIcon = Get-IniValue $ini $shellSection 'IconResource'
+        if ($prevIcon) { $file, $idx = Split-IconResource $prevIcon; Set-ShellFolderIcon $folder $file $idx }
+        else           { Set-ShellFolderIcon $folder '' 0 }
+
         if (Test-IniEmpty $ini) {
             Remove-Item -LiteralPath $iniFile -Force
         } else {
@@ -194,7 +220,6 @@ switch ($PSCmdlet.ParameterSetName) {
         $dir = Get-Item -LiteralPath $folder -Force
         if ($prevAttrs) { $dir.Attributes = [IO.FileAttributes]$prevAttrs }
         else { $dir.Attributes = $dir.Attributes -band (-bnot ([IO.FileAttributes]::ReadOnly -bor [IO.FileAttributes]::System)) }
-        Send-ShellNotify $folder
         Write-Output "Reset $folder to its previous icon"
     }
 
@@ -238,7 +263,7 @@ switch ($PSCmdlet.ParameterSetName) {
         $dir = Get-Item -LiteralPath $folder -Force
         $dir.Attributes = $dir.Attributes -bor [IO.FileAttributes]::ReadOnly -bor [IO.FileAttributes]::System
 
-        Send-ShellNotify $folder
+        Set-ShellFolderIcon $folder $iclPath $target.index
         Write-Output "Set $folder -> $($target.index) $($target.category) ($($target.color))"
     }
 }
