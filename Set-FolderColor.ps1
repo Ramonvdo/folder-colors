@@ -10,6 +10,10 @@
     The colour is stored as an icon index, so renaming a category later never
     touches folders that are already coloured.
 
+    An existing desktop.ini (folder-type template, folder picture, a custom icon set
+    through Properties) is kept: only the icon lines change, and the previous icon
+    is remembered so -Reset puts it back.
+
 .EXAMPLE
     .\Set-FolderColor.ps1 -List
     .\Set-FolderColor.ps1 -Path 'D:\Clients\Acme' -Category Clients
@@ -43,11 +47,6 @@ param(
     [Parameter(ParameterSetName = 'Set')]
     [int]$Index = -1,
 
-    # Overwrite a desktop.ini that this tool did not write (OneDrive, special folders).
-    [Parameter(ParameterSetName = 'Set')]
-    [Parameter(ParameterSetName = 'Reset')]
-    [switch]$Force,
-
     # Report failures in a message box; used by the context menu, which has no console.
     [switch]$ShowErrors
 )
@@ -56,7 +55,9 @@ $ErrorActionPreference = 'Stop'
 
 $iclPath    = Join-Path $PSScriptRoot 'assets\Windows_11_coloured_icons.icl'
 $configPath = Join-Path $PSScriptRoot 'categories.json'
-$ourSection = '[FolderColors]'   # marks a desktop.ini as written by this tool
+$shellSection = '.ShellClassInfo'
+$ourSection   = 'FolderColors'      # our own section; its presence marks a folder as coloured by this tool
+$iconKeys     = 'IconResource', 'IconFile', 'IconIndex'
 
 function Get-Categories {
     if (-not (Test-Path -LiteralPath $configPath)) { throw "categories.json not found at $configPath" }
@@ -75,18 +76,68 @@ function Resolve-Folder([string]$p) {
     return $full
 }
 
+# --- desktop.ini as an ordered list of sections, each an ordered list of lines ------------
+
+function Read-Ini([string]$file) {
+    $ini = [ordered]@{}
+    if (-not (Test-Path -LiteralPath $file)) { return $ini }
+    $current = ''
+    foreach ($line in ((Get-Content -LiteralPath $file -Raw -Force) -split "`r?`n")) {
+        if ($line -match '^\s*\[(.+?)\]\s*$') {
+            $current = $Matches[1]
+            if (-not $ini.Contains($current)) { $ini[$current] = New-Object System.Collections.ArrayList }
+        } elseif ($line.Trim()) {
+            if (-not $ini.Contains($current)) { $ini[$current] = New-Object System.Collections.ArrayList }
+            [void]$ini[$current].Add($line)
+        }
+    }
+    return $ini
+}
+
+function Write-Ini([string]$file, $ini) {
+    $out = New-Object System.Collections.ArrayList
+    foreach ($name in $ini.Keys) {
+        if ($ini[$name].Count -eq 0 -and $name -ne $shellSection) { continue }
+        if ($name) { [void]$out.Add("[$name]") }
+        foreach ($l in $ini[$name]) { [void]$out.Add($l) }
+    }
+    # Unicode (UTF-16 LE) keeps accented paths intact for Explorer.
+    Set-Content -LiteralPath $file -Value ($out -join "`r`n") -Encoding Unicode -Force
+    $item = Get-Item -LiteralPath $file -Force
+    $item.Attributes = $item.Attributes -bor [IO.FileAttributes]::Hidden -bor [IO.FileAttributes]::System
+}
+
+function Get-IniValue($ini, [string]$section, [string]$key) {
+    if (-not $ini.Contains($section)) { return $null }
+    foreach ($l in $ini[$section]) { if ($l -match "^\s*$([regex]::Escape($key))\s*=(.*)$") { return $Matches[1].Trim() } }
+    return $null
+}
+
+function Remove-IniKeys($ini, [string]$section, [string[]]$keys) {
+    if (-not $ini.Contains($section)) { return }
+    $pattern = '^\s*(' + (($keys | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')\s*='
+    $keep = @($ini[$section] | Where-Object { $_ -notmatch $pattern })
+    $ini[$section] = New-Object System.Collections.ArrayList
+    foreach ($l in $keep) { [void]$ini[$section].Add($l) }
+}
+
+function Test-IniEmpty($ini) {
+    foreach ($name in $ini.Keys) { if ($ini[$name].Count -gt 0) { return $false } }
+    return $true
+}
+
+# --- folder state ----------------------------------------------------------------------
+
 function Read-FolderState([string]$folder) {
-    $ini = Join-Path $folder 'desktop.ini'
-    $state = [pscustomobject]@{ Path = $folder; Index = $null; Category = $null; Color = $null; Ours = $false; HasIni = $false }
-    if (-not (Test-Path -LiteralPath $ini)) { return $state }
-    $state.HasIni = $true
-    $text = Get-Content -LiteralPath $ini -Raw -Force
-    if ($text -notmatch [regex]::Escape($ourSection)) { return $state }
-    $state.Ours = $true
-    if ($text -match '(?m)^Index=(\d+)\s*$') {
-        $state.Index = [int]$Matches[1]
-        $match = Get-Categories | Where-Object { $_.index -eq $state.Index } | Select-Object -First 1
-        if ($match) { $state.Category = $match.category; $state.Color = $match.color }
+    $ini = Read-Ini (Join-Path $folder 'desktop.ini')
+    $state = [pscustomobject]@{ Path = $folder; Index = $null; Category = $null; Color = $null; Ours = $ini.Contains($ourSection) }
+    if ($state.Ours) {
+        $idx = Get-IniValue $ini $ourSection 'Index'
+        if ($idx -match '^\d+$') {
+            $state.Index = [int]$idx
+            $match = Get-Categories | Where-Object { $_.index -eq $state.Index } | Select-Object -First 1
+            if ($match) { $state.Category = $match.category; $state.Color = $match.color }
+        }
     }
     return $state
 }
@@ -117,22 +168,34 @@ switch ($PSCmdlet.ParameterSetName) {
 
     'Get' {
         $folder = Resolve-Folder $Path
-        $s = Read-FolderState $folder
-        if ($s.HasIni -and -not $s.Ours) { $s.Category = '(desktop.ini not written by FolderColors)' }
-        $s | Select-Object Path, Index, Category, Color
+        Read-FolderState $folder | Select-Object Path, Index, Category, Color
     }
 
     'Reset' {
         $folder = Resolve-Folder $Path
-        $s = Read-FolderState $folder
-        if (-not $s.HasIni) { Write-Output "No colour set on $folder"; return }
-        if (-not $s.Ours -and -not $Force) { throw "$folder has a desktop.ini this tool did not write. Re-run with -Force to delete it anyway." }
-        $ini = Join-Path $folder 'desktop.ini'
-        Remove-Item -LiteralPath $ini -Force
+        $iniFile = Join-Path $folder 'desktop.ini'
+        $ini = Read-Ini $iniFile
+        if (-not $ini.Contains($ourSection)) { Write-Output "No colour set by Folder Colors on $folder"; return }
+
+        # Drop our icon, put back whatever icon lines were there before us.
+        Remove-IniKeys $ini $shellSection $iconKeys
+        foreach ($k in $iconKeys) {
+            $prev = Get-IniValue $ini $ourSection "Previous.$k"
+            if ($null -ne $prev) { [void]$ini[$shellSection].Insert(0, "$k=$prev") }
+        }
+        $prevAttrs = Get-IniValue $ini $ourSection 'Previous.Attributes'
+        $ini.Remove($ourSection)
+
+        if (Test-IniEmpty $ini) {
+            Remove-Item -LiteralPath $iniFile -Force
+        } else {
+            Write-Ini $iniFile $ini      # other customisations stay
+        }
         $dir = Get-Item -LiteralPath $folder -Force
-        $dir.Attributes = $dir.Attributes -band (-bnot ([IO.FileAttributes]::ReadOnly -bor [IO.FileAttributes]::System))
+        if ($prevAttrs) { $dir.Attributes = [IO.FileAttributes]$prevAttrs }
+        else { $dir.Attributes = $dir.Attributes -band (-bnot ([IO.FileAttributes]::ReadOnly -bor [IO.FileAttributes]::System)) }
         Send-ShellNotify $folder
-        Write-Output "Reset $folder to the default folder icon"
+        Write-Output "Reset $folder to its previous icon"
     }
 
     'Set' {
@@ -151,24 +214,25 @@ switch ($PSCmdlet.ParameterSetName) {
             throw "No match. Valid values:`n  $valid"
         }
 
-        $folder = Resolve-Folder $Path
-        $s = Read-FolderState $folder
-        if ($s.HasIni -and -not $s.Ours -and -not $Force) {
-            throw "$folder already has a desktop.ini this tool did not write (OneDrive or a special folder). Re-run with -Force to overwrite it."
+        $folder  = Resolve-Folder $Path
+        $iniFile = Join-Path $folder 'desktop.ini'
+        $ini = Read-Ini $iniFile
+        if (-not $ini.Contains($shellSection)) { $ini[$shellSection] = New-Object System.Collections.ArrayList }
+
+        if (-not $ini.Contains($ourSection)) {
+            # First time here: remember the icon the folder had, if any, so -Reset can restore it.
+            $ini[$ourSection] = New-Object System.Collections.ArrayList
+            foreach ($k in $iconKeys) {
+                $prev = Get-IniValue $ini $shellSection $k
+                if ($null -ne $prev) { [void]$ini[$ourSection].Add("Previous.$k=$prev") }
+            }
+            [void]$ini[$ourSection].Add("Previous.Attributes=$((Get-Item -LiteralPath $folder -Force).Attributes)")
         }
-
-        $ini = Join-Path $folder 'desktop.ini'
-        $content = @"
-[.ShellClassInfo]
-IconResource=$iclPath,$($target.index)
-
-$ourSection
-Index=$($target.index)
-"@
-        # Unicode (UTF-16 LE) keeps accented paths intact for Explorer.
-        Set-Content -LiteralPath $ini -Value $content -Encoding Unicode -Force
-        $iniItem = Get-Item -LiteralPath $ini -Force
-        $iniItem.Attributes = $iniItem.Attributes -bor [IO.FileAttributes]::Hidden -bor [IO.FileAttributes]::System
+        Remove-IniKeys $ini $shellSection $iconKeys
+        [void]$ini[$shellSection].Insert(0, "IconResource=$iclPath,$($target.index)")
+        Remove-IniKeys $ini $ourSection @('Index')
+        [void]$ini[$ourSection].Insert(0, "Index=$($target.index)")
+        Write-Ini $iniFile $ini
 
         # Explorer only honours desktop.ini on folders flagged ReadOnly or System.
         $dir = Get-Item -LiteralPath $folder -Force

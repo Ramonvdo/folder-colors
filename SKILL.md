@@ -25,9 +25,10 @@ is stored in the folder's hidden `desktop.ini` as an **index**, so a category ca
 renamed or regrouped later without touching any folder. Exit code 0 means applied; a
 non-zero exit carries the reason on stderr.
 
-The engine refuses to overwrite a `desktop.ini` it did not write (OneDrive folders,
-Windows special folders). `-Force` overwrites it and loses whatever that file held, so
-that is the user's decision: report the refusal and ask.
+A folder that already has a `desktop.ini` (folder-type template, folder picture, an icon
+set through Properties) keeps it: the engine replaces only the icon lines, remembers the
+previous icon and the folder's attributes, and `-Reset` puts both back. `-Get` reports an
+empty index for a folder whose `desktop.ini` this tool has not touched.
 
 ## One folder
 

@@ -106,7 +106,9 @@ run `.\Set-FolderColor.ps1 -Path <folder> -Reset` on any you want plain again.
 - Windows lets a folder pick its own icon through a hidden `desktop.ini`. The script writes
   one pointing at icon `n` inside `assets\Windows_11_coloured_icons.icl`, sets the
   read-only and system attributes Explorer requires, and calls `SHChangeNotify` so the
-  icon repaints at once.
+  icon repaints at once. A `desktop.ini` that is already there (a folder-type template, a
+  folder picture, an icon you set through Properties) is kept: only the icon lines change,
+  and "Reset to default" restores the icon and attributes the folder had before.
 - The menu is a single key under `HKCU\Software\Classes\Directory\shell`. Each entry runs
   `powershell.exe -WindowStyle Hidden -File Set-FolderColor.ps1 -Path "%1" -Index n`.
   Errors show up in a message box instead of a console.
