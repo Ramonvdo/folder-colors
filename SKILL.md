@@ -1,6 +1,6 @@
 ---
 name: folder-colors
-description: Colour-code Windows folders by category using the Folder Colors toolkit (20 Windows 11 folder icons, each mapped to a category in categories.json). Use when the user asks to colour, recolour or reset a folder; to organise or colour-code a directory by category; to add, rename, regroup or reassign a category; or to install, repair or remove the right-click "Folder Color" menu.
+description: Colour and tag one Windows folder by category with the Folder Colors toolkit (20 Windows 11 folder icons, each mapped to a category in categories.json). Use when the user asks to colour, recolour, tag or reset a folder or a few named folders; to add, rename, regroup or reassign a category; or to install, repair or remove the right-click "Folder Color" entry. Organising a whole directory, drive or PC belongs to the organize-pc skill.
 ---
 
 # folder-colors
@@ -41,20 +41,12 @@ turns this off.
 Run the engine, then `-Get` and confirm the reported index is the one requested. Open
 Explorer windows repaint on their own.
 
-## Organise a directory by category
+## Many folders, a whole directory, the PC
 
-1. Confirm the target root with the user. Top level only, unless they ask for recursion.
-   Roots to leave alone entirely: `C:\Windows`, `Program Files*`, `AppData`, `.git`,
-   `node_modules`.
-2. List its subfolders (`Get-ChildItem -Directory`) and `-Get` each one for its current
-   colour.
-3. Assign each subfolder one category from `categories.json`, judging by the name first and
-   a glance at a few filenames when the name is ambiguous. `hints` in the JSON are
-   tie-breakers, not rules. A folder that fits nothing stays uncoloured; forcing a fit is
-   worse than leaving it plain.
-4. Show a table (folder, current, proposed, one-line reason) and wait for approval or edits.
-5. Apply one engine call per approved row, then `-Get` every row again. Done when every
-   approved row reports its proposed index; show the final table with a result column.
+That is `organize-pc` (`organize-pc\SKILL.md` in this repo, `/organize-pc` when
+installed): it decides where things live, moves them with an undo log, writes the area
+READMEs and the PC map, and calls this engine for the colouring. Hand over rather than
+colouring folder by folder.
 
 ## Change the categories or groups
 

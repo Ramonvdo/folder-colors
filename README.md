@@ -88,21 +88,37 @@ Everything is in `categories.json`:
 
 ## Use it with Claude Code
 
-The repo root is a Claude Code skill. Link it into your skills folder once:
+Two skills ship in this repo. Link them into your skills folder once, from inside the
+checkout:
 
 ```powershell
 New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\folder-colors" -Target (Get-Location).Path
+New-Item -ItemType Junction -Path "$env:USERPROFILE\.claude\skills\organize-pc" -Target "$((Get-Location).Path)\organize-pc"
 ```
 
-Then, in any Claude Code session:
+**folder-colors** (`SKILL.md`) colours and tags folders:
 
 - "Colour `D:\Clients\Acme` as a client folder."
-- "Organise my Documents folder by category." Claude lists the subfolders, proposes a
-  category for each with a one-line reason, waits for your approval, applies it, and
-  checks every folder afterwards.
 - "Rename the Marketing category to Content."
 
-`SKILL.md` holds the rules Claude follows, including the folders it never touches.
+**organize-pc** (`organize-pc\SKILL.md`) structures the machine and keeps it that way:
+
+- "Organise my PC." A short interview, a read-only inventory of the roots you choose, then
+  a proposal table: numbered areas (`01_CLIENTS`, `04_FINANCE`, `99_ARCHIVE`, ...), each
+  with a colour and a tag, and a target for every existing folder and stray file. Nothing
+  moves until you approve the table. Every move is logged and can be undone as a batch.
+  Each area gets a `00_README.md` (its rules, in the folder itself) and the machine gets a
+  `PC-MAP.md` in your profile that any LLM reads first.
+- "Tidy my Downloads." Files get a place according to the map and the READMEs; Storage
+  Sense can be set to delete what sits in Downloads untouched for 14 days.
+- "Where do client invoices go?" Answered from the READMEs, with the rule quoted.
+- "Undo the last reorganisation."
+
+The map keeps itself honest: `organize-pc\scripts\Update-PcMap.ps1` rewrites its auto
+section from the real folders (new folders you made by hand show up as unmapped), and can
+be registered as a daily task. The doctrine behind the layout, numbered areas, depth of
+three, dated file names, transit folders that empty themselves, an SOP in every folder, is
+in `organize-pc\references\principles.md`; the starting layouts in `presets.md`.
 
 ## Uninstall
 
