@@ -1,7 +1,7 @@
 <h1 align="center">Folder Colors</h1>
 <p align="center">Colour-code Windows 11 folders by category from the right-click menu, or let Claude do it for you.</p>
 
-<p align="center"><img src=".github/assets/picker.png" alt="The Folder Color palette opened from the right-click menu" width="640" /></p>
+<p align="center"><img src=".github/assets/palette.png" alt="The 20 colours and their default categories" width="820" /></p>
 
 Twenty folder icons, each tied to a category you can rename. Right-click a folder, pick
 "Folder Color...", click "Clients", and the folder turns light blue. The category name also
@@ -11,8 +11,6 @@ mapping lives in one JSON file. Four Claude Code skills ship with it, as a plugi
 project at once, `tidy-folder` brings order inside one folder (with a strict, sourced
 finance profile), and `organize-pc` turns "organise my PC" into a proposal table you
 approve, numbered areas with a README each, and a map of the machine any LLM reads first.
-
-<p align="center"><img src=".github/assets/palette.png" alt="The 20 colours and their default categories" width="820" /></p>
 
 ## Install
 
